@@ -32,4 +32,5 @@ systemctl restart agentvpnservice
 ```
 
 Systemd unit: `deploy/agentvpnservice.service`  
-Nginx: `deploy/nginx-agentvpnservice.conf`
+Apache (этот хост): `deploy/apache-agentvpnservice.conf` + `deploy/apache-agentvpnservice-le-ssl.conf`  
+Nginx-заготовка (если перенос): `deploy/nginx-agentvpnservice.conf`

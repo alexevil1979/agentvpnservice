@@ -85,7 +85,7 @@ async def process_incident(incident_id: str) -> None:
             proposal_text="Сервер не найден в inventory или SSH недоступен.",
             result_summary=probe.raw[:500],
         )
-        await notify_needs_human(db.get_incident(incident_id) or inc)
+        asyncio.create_task(notify_needs_human(db.get_incident(incident_id) or inc))
         return
 
     catalog = catalog_for_planner(settings.enabled_runbook_ids)
@@ -113,13 +113,13 @@ async def process_incident(incident_id: str) -> None:
             proposal_text=plan.get("explanation") or "Нужен человек",
             proposed_runbook=None,
         )
-        await notify_needs_human(db.get_incident(incident_id) or inc)
+        asyncio.create_task(notify_needs_human(db.get_incident(incident_id) or inc))
         return
 
     rb = get_runbook(plan["runbook_id"])
     if not rb:
         db.update_incident(incident_id, status="needs_human", proposal_text="Неизвестный runbook")
-        await notify_needs_human(db.get_incident(incident_id) or inc)
+        asyncio.create_task(notify_needs_human(db.get_incident(incident_id) or inc))
         return
 
     # For high risk require check match
@@ -129,7 +129,7 @@ async def process_incident(incident_id: str) -> None:
             status="needs_human",
             proposal_text=f"Сценарий {rb.id} высокий риск и check не из allowlist — нужен человек.",
         )
-        await notify_needs_human(db.get_incident(incident_id) or inc)
+        asyncio.create_task(notify_needs_human(db.get_incident(incident_id) or inc))
         return
 
     nonce = secrets.token_urlsafe(12)
@@ -144,13 +144,17 @@ async def process_incident(incident_id: str) -> None:
         decision_at=None,
         decision_by=None,
     )
-    tg = await notify_proposal(updated or inc, rb.title, rb.steps_preview())
-    if tg.get("ok"):
-        try:
-            mid = str(tg["body"]["result"]["message_id"])
-            db.update_incident(incident_id, telegram_message_id=mid)
-        except Exception:
-            pass
+
+    async def _send_proposal() -> None:
+        tg = await notify_proposal(updated or inc, rb.title, rb.steps_preview())
+        if tg.get("ok"):
+            try:
+                mid = str(tg["body"]["result"]["message_id"])
+                db.update_incident(incident_id, telegram_message_id=mid)
+            except Exception:
+                pass
+
+    asyncio.create_task(_send_proposal())
 
 
 async def handle_decision(incident_id: str, nonce: str, decision: str, who: str) -> None:
@@ -173,7 +177,7 @@ async def handle_decision(incident_id: str, nonce: str, decision: str, who: str)
             nonce=None,
             result_summary="Отклонено админом",
         )
-        await notify_result(db.get_incident(incident_id) or inc)
+        asyncio.create_task(notify_result(db.get_incident(incident_id) or inc))
         return
 
     db.update_incident(
@@ -204,7 +208,7 @@ async def execute_incident(incident_id: str) -> None:
             result_summary=f"Dry-run: сценарий {rb.id} НЕ выполнен. Шаги были бы: {', '.join(rb.steps_preview())}",
         )
         db.add_step(incident_id, "dry_run", True, "skipped mutating steps because DRY_RUN=1")
-        await notify_result(db.get_incident(incident_id) or inc)
+        asyncio.create_task(notify_result(db.get_incident(incident_id) or inc))
         return
 
     db.update_incident(incident_id, status="running")
@@ -227,7 +231,7 @@ async def execute_incident(incident_id: str) -> None:
         status="done" if all_ok else "failed",
         result_summary=("OK " if all_ok else "FAIL ") + rb.id,
     )
-    await notify_result(db.get_incident(incident_id) or inc)
+    asyncio.create_task(notify_result(db.get_incident(incident_id) or inc))
 
 
 async def _reminder_loop() -> None:
@@ -257,13 +261,15 @@ async def _reminder_loop() -> None:
                         result_summary="Таймаут ожидания подтверждения",
                         nonce=None,
                     )
-                    await notify_result(db.get_incident(inc["id"]) or inc)
+                    asyncio.create_task(notify_result(db.get_incident(inc["id"]) or inc))
                     continue
                 rb = get_runbook(inc.get("proposed_runbook") or "")
-                await notify_proposal(
-                    inc,
-                    rb.title if rb else (inc.get("proposed_runbook") or "?"),
-                    rb.steps_preview() if rb else [],
+                asyncio.create_task(
+                    notify_proposal(
+                        inc,
+                        rb.title if rb else (inc.get("proposed_runbook") or "?"),
+                        rb.steps_preview() if rb else [],
+                    )
                 )
                 db.update_incident(inc["id"], reminded_at=db.utcnow())
         except Exception:

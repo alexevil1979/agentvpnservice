@@ -39,13 +39,15 @@ async def request_json(
     *,
     headers: Optional[Dict[str, str]] = None,
     json_body: Any = None,
-    timeout: float = 60.0,
+    timeout: float = 25.0,
 ) -> Tuple[int, Any, Optional[str]]:
     """Try direct then SOCKS. Returns status, parsed body, proxy_used."""
     last_err: Optional[Exception] = None
+    # Per-attempt timeout so a dead SOCKS port does not stall the whole queue.
+    per_try = min(timeout, 12.0)
     for proxy in _proxy_urls():
         try:
-            kwargs: Dict[str, Any] = {"timeout": timeout}
+            kwargs: Dict[str, Any] = {"timeout": per_try}
             if proxy:
                 kwargs["proxy"] = proxy
             async with httpx.AsyncClient(**kwargs) as client:
