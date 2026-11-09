@@ -52,7 +52,12 @@ def run_remote(
     port = auth["port"]
     script = textwrap.dedent(remote_script).strip() + "\n"
 
-    attempts: list[Optional[int]] = [None] + _socks_ports()
+    # Never proxy loopback / LAN-local targets through SOCKS.
+    host_l = str(host).strip()
+    localish = host_l in ("127.0.0.1", "localhost", "::1") or host_l.startswith(
+        ("10.", "192.168.", "172.16.", "172.17.", "172.18.", "172.19.", "172.2", "172.3")
+    )
+    attempts: list[Optional[int]] = [None] if localish else ([None] + _socks_ports())
     last_out = ""
     key_path_tmp: Optional[str] = None
     try:

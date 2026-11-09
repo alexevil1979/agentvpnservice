@@ -38,6 +38,9 @@ async def start_background() -> None:
     _bg_tasks.append(asyncio.create_task(_reminder_loop(), name="reminder-loop"))
     _poller = TelegramPoller(on_decision=handle_decision)
     _poller.start()
+    # Resume unfinished intake after restart
+    for inc in db.list_incidents(status="received", limit=50):
+        await q.put(inc["id"])
 
 
 async def stop_background() -> None:
@@ -82,19 +85,28 @@ async def process_incident(incident_id: str) -> None:
         db.update_incident(
             incident_id,
             status="needs_human",
-            proposal_text="Сервер не найден в inventory или SSH недоступен.",
+            proposal_text="Сервер не найден в inventory.",
             result_summary=probe.raw[:500],
         )
         asyncio.create_task(notify_needs_human(db.get_incident(incident_id) or inc))
         return
 
     catalog = catalog_for_planner(settings.enabled_runbook_ids)
-    # force match for check-driven high-risk maps runbook
+    # force match for check-driven runbooks even if SSH probe failed
     matches = dict(probe.matches)
     for c in catalog:
         rb = get_runbook(c["id"])
         if rb and inc["check_code"] in rb.match_checks:
             matches[c["id"]] = True
+    if not probe.ok and not any(matches.values()):
+        db.update_incident(
+            incident_id,
+            status="needs_human",
+            proposal_text="SSH/пробы недоступны и check не совпал ни с одним сценарием.",
+            result_summary=probe.raw[:500],
+        )
+        asyncio.create_task(notify_needs_human(db.get_incident(incident_id) or inc))
+        return
 
     plan = await plan_runbook(
         server_id=inc["server_id"],
