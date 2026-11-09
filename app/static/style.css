@@ -1,0 +1,66 @@
+:root {
+  --bg: #0f1419;
+  --card: #1a222c;
+  --text: #e7ecf1;
+  --muted: #8b9aab;
+  --accent: #3d9cfd;
+  --ok: #3ecf8e;
+  --bad: #f07178;
+  --warn: #e6b450;
+  --border: #2a3542;
+  --font: "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.45;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
+nav {
+  display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+  padding: .85rem 1.25rem; border-bottom: 1px solid var(--border);
+  background: #121820;
+}
+nav .brand { font-weight: 700; margin-right: auto; }
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1rem 1.1rem; margin: 1rem 0;
+}
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { text-align: left; padding: .55rem .4rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+.badge {
+  display: inline-block; padding: .15rem .45rem; border-radius: 6px;
+  font-size: .78rem; background: #243041; color: var(--muted);
+}
+.badge.ok { background: #1b3a2f; color: var(--ok); }
+.badge.bad { background: #3a1f24; color: var(--bad); }
+.badge.warn { background: #3a321a; color: var(--warn); }
+.btn {
+  display: inline-block; border: 0; border-radius: 8px; padding: .55rem .9rem;
+  background: var(--accent); color: #041018; font-weight: 600; cursor: pointer;
+}
+.btn.secondary { background: #2c3848; color: var(--text); }
+.btn.danger { background: #a33b44; color: #fff; }
+input, select, textarea {
+  width: 100%; max-width: 520px; background: #0d1218; color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; padding: .55rem .7rem;
+}
+label { display: block; margin: .7rem 0 .25rem; color: var(--muted); font-size: .9rem; }
+pre {
+  white-space: pre-wrap; word-break: break-word; background: #0d1218;
+  border: 1px solid var(--border); border-radius: 8px; padding: .75rem; font-size: .85rem;
+}
+.filters { display: flex; gap: .6rem; flex-wrap: wrap; align-items: end; }
+.filters > div { min-width: 160px; }
+.muted { color: var(--muted); }
+.err { color: var(--bad); }
+.okmsg { color: var(--ok); }
+.login-box { max-width: 380px; margin: 10vh auto; }
+h1 { font-size: 1.35rem; margin: .2rem 0 1rem; }
+h2 { font-size: 1.1rem; margin: 0 0 .6rem; }

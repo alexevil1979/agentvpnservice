@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Сценарии — agentvpnservice{% endblock %}
+{% block body %}
+<h1>Сценарии (только чтение)</h1>
+<p class="muted">Включены: {{ settings.enabled_runbooks }}</p>
+{% for rb in runbooks %}
+<div class="card">
+  <h2>{{ rb.id }} — {{ rb.title }}</h2>
+  <p><span class="badge {% if rb.risk=='high' %}bad{% elif rb.risk=='medium' %}warn{% else %}ok{% endif %}">{{ rb.risk }}</span>
+     {% if rb.mutating %}<span class="badge">mutating</span>{% else %}<span class="badge">read-only</span>{% endif %}
+  </p>
+  <p>{{ rb.description }}</p>
+  <p class="muted">Когда: {{ rb.when_description }}</p>
+  <p>Checks: {{ rb.match_checks | join(', ') }}</p>
+  <p>Шаги: {{ rb.steps_preview() | join(' → ') }}</p>
+</div>
+{% endfor %}
+{% endblock %}

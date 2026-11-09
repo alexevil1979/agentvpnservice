@@ -1,0 +1,9 @@
+# Copy to inventory.yml on the host (outside git tracking of secrets).
+version: 1
+defaults:
+  ssh_user: root
+  ssh_port: 22
+  auth:
+    method: key
+    key_path_env: HIDDIFY_SSH_KEY_PATH
+servers: []

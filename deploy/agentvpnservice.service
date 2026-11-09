@@ -1,0 +1,16 @@
+[Unit]
+Description=agentvpnservice fleet repair agent
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/ssd/www/agentvpnservice
+EnvironmentFile=-/ssd/www/agentvpnservice/.env
+ExecStart=/ssd/www/agentvpnservice/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8091
+Restart=always
+RestartSec=3
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

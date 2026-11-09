@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Настройки — agentvpnservice{% endblock %}
+{% block body %}
+<h1>Настройки</h1>
+{% if msg %}<p class="okmsg">{{ msg }}</p>{% endif %}
+{% if request.query_params.get('tg') == 'ok' %}<p class="okmsg">Telegram тест отправлен</p>{% endif %}
+{% if request.query_params.get('tg') == 'fail' %}<p class="err">Telegram тест не удался</p>{% endif %}
+{% if request.query_params.get('portix') == 'ok' %}<p class="okmsg">Portix /models OK</p>{% endif %}
+{% if request.query_params.get('portix') == 'fail' %}<p class="err">Portix /models fail</p>{% endif %}
+<div class="card">
+  <p class="muted">Рабочий SOCKS порт: {{ socks_working or '—' }} · PUBLIC_BASE_URL={{ settings.public_base_url }}</p>
+  <form method="post" action="/settings">
+    <label>Portix model</label>
+    <input name="portix_model" value="{{ settings.portix_model }}">
+    <label>Enabled runbooks (comma)</label>
+    <input name="enabled_runbooks" value="{{ settings.enabled_runbooks }}" style="max-width:100%">
+    <label>SOCKS preferred port</label>
+    <input name="socks_preferred" value="{{ settings.socks_preferred }}">
+    <label>Approval timeout (min)</label>
+    <input name="approval_timeout_minutes" type="number" value="{{ settings.approval_timeout_minutes }}">
+    <label>Reminder (min)</label>
+    <input name="reminder_minutes" type="number" value="{{ settings.reminder_minutes }}">
+    <label><input type="checkbox" name="dry_run" value="1" {% if settings.dry_run %}checked{% endif %}> Dry-run (не исполнять починки)</label>
+    <label>Portix API key (заменить, пусто = не менять)</label>
+    <input name="portix_api_key_new" type="password" autocomplete="off" placeholder="••••">
+    <label>Webhook token (заменить)</label>
+    <input name="incident_webhook_token_new" type="password" autocomplete="off" placeholder="••••">
+    <label>Telegram bot token (заменить)</label>
+    <input name="telegram_bot_token_new" type="password" autocomplete="off" placeholder="••••">
+    <p style="margin-top:1rem"><button class="btn" type="submit">Сохранить</button></p>
+  </form>
+  <form method="post" action="/settings/test-telegram" style="display:inline"><button class="btn secondary" type="submit">Тест Telegram</button></form>
+  <form method="post" action="/settings/test-portix" style="display:inline"><button class="btn secondary" type="submit">Тест Portix</button></form>
+</div>
+{% endblock %}

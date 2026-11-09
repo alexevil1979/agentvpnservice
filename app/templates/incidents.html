@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Инциденты — agentvpnservice{% endblock %}
+{% block body %}
+<h1>Инциденты</h1>
+<p class="muted">dry-run={{ settings.dry_run }} · {{ settings.public_base_url }}</p>
+<form class="card filters" method="get">
+  <div>
+    <label>Статус</label>
+    <select name="status">
+      <option value="">все</option>
+      {% for s in ['received','probing','awaiting_approval','approved','running','done','done_dry_run','rejected','failed','needs_human','expired'] %}
+      <option value="{{s}}" {% if status==s %}selected{% endif %}>{{s}}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div>
+    <label>server_id</label>
+    <input name="server_id" value="{{ server_id }}">
+  </div>
+  <div><button class="btn secondary" type="submit">Фильтр</button></div>
+</form>
+<div class="card">
+<table>
+  <thead>
+    <tr><th>Когда</th><th>Сервер</th><th>Check</th><th>Статус</th><th>Сценарий</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for i in items %}
+    <tr>
+      <td class="muted">{{ i.created_at }}</td>
+      <td>{{ i.server_id }}</td>
+      <td>{{ i.check_code }}</td>
+      <td><span class="badge {% if i.status in ['done','done_dry_run'] %}ok{% elif i.status in ['failed','expired'] %}bad{% elif i.status=='awaiting_approval' %}warn{% endif %}">{{ i.status }}</span></td>
+      <td>{{ i.proposed_runbook or '—' }}</td>
+      <td><a href="/incidents/{{ i.id }}">открыть</a></td>
+    </tr>
+  {% else %}
+    <tr><td colspan="6" class="muted">Пока пусто</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

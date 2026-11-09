@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ inc.server_id }} — agentvpnservice{% endblock %}
+{% block body %}
+<p><a href="/">← к списку</a></p>
+<h1>{{ inc.server_id }} / {{ inc.check_code }}</h1>
+<div class="card">
+  <p><span class="badge">{{ inc.status }}</span>
+     {% if inc.risk %}<span class="badge warn">risk {{ inc.risk }}</span>{% endif %}
+     {% if settings.dry_run %}<span class="badge">dry-run</span>{% endif %}
+  </p>
+  <p><strong>Создан:</strong> {{ inc.created_at }} · <strong>Обновлён:</strong> {{ inc.updated_at }}</p>
+  <p><strong>Сценарий:</strong> {{ inc.proposed_runbook or '—' }}
+     {% if runbook %}( {{ runbook.title }} ){% endif %}</p>
+  <p><strong>Решение:</strong> {{ inc.decision or '—' }}
+     {% if inc.decision_by %} / {{ inc.decision_by }} @ {{ inc.decision_at }}{% endif %}</p>
+  <h2>Summary</h2>
+  <pre>{{ inc.summary }}</pre>
+  <h2>Evidence</h2>
+  <pre>{{ inc.evidence }}</pre>
+  <h2>Предложение</h2>
+  <pre>{{ inc.proposal_text }}</pre>
+  <h2>Итог</h2>
+  <pre>{{ inc.result_summary }}</pre>
+  {% if inc.status == 'awaiting_approval' and inc.nonce %}
+  <form method="post" action="/incidents/{{ inc.id }}/decide" style="display:flex;gap:.6rem">
+    <button class="btn" name="decision" value="approved" type="submit">Фиксить</button>
+    <button class="btn danger" name="decision" value="rejected" type="submit">Отклонить</button>
+  </form>
+  {% endif %}
+</div>
+<div class="card">
+  <h2>Пробы</h2>
+  <pre>{{ probe | tojson(indent=2) }}</pre>
+</div>
+<div class="card">
+  <h2>Шаги</h2>
+  {% for s in steps %}
+    <p><span class="badge {% if s.ok %}ok{% else %}bad{% endif %}">{{ s.step_name }}</span>
+       <span class="muted">{{ s.created_at }}</span></p>
+    <pre>{{ s.output }}</pre>
+  {% else %}
+    <p class="muted">Шагов ещё нет</p>
+  {% endfor %}
+</div>
+{% endblock %}
